@@ -1,0 +1,67 @@
+---
+title       : Gene expression in acute leukemia
+subtitle    : 
+author      : Velizar Shivarov
+job         : 
+framework   : io2012        # {io2012, html5slides, shower, dzslides, ...}
+highlighter : highlight.js  # {highlight.js, prettify, highlight}
+hitheme     : tomorrow      # 
+widgets     : [bootstrap, quiz]            # {mathjax, quiz, bootstrap}
+mode        : selfcontained # {standalone, draft}
+knit        : slidify::knit2slides
+---
+
+## Motivation
+
+1. Omics technologies are paving their way towards the clinics
+2. Large scale data require in-depth analytical skills
+3. User-friendly applications analytical tools are needed
+
+## Goal
+1. To develop a shiny application demonstrating differential gene expression in acute leukemia
+2. To perform that task using a classical dataset from [Golub et al.(Science, 1999)](http://www.ncbi.nlm.nih.gov/pubmed/10521349)
+3. Analysis of differentially expressed genes is performed the [Linear Models for Microarray Data (limma package for Bioconductor)](http://www.bioconductor.org/packages/release/bioc/html/limma.html) 
+
+---  
+
+## List of differentially expressed genes
+
+```{r, results='hide', echo=FALSE, warning=FALSE, errors=FALSE, eval=TRUE, cache=TRUE}
+biocLite(c("multtest","limma"))
+library(multtest)
+library(limma)
+data(golub)
+```
+
+
+```{r}
+data(golub)
+gol.fac<-factor(golub.cl, levels=c(0,1), labels=c("ALL","AML"))
+design<-model.matrix(~gol.fac)
+colnames(design)<-c("ALL","AML")
+fit<-lmFit(golub,design)
+fit2<-eBayes(fit)
+tbl<-topTable(fit2, coef ="AML",adjust="BH", p.value=0.01, sort.by="P", number=5)
+tbl
+```
+
+---
+
+## Heatmap with unsupervised clustering
+
+```{r, fig.height = 4, fig.align = 'center', message = F}
+bluered <- colorRampPalette(c("blue","white","red"))(256)
+col.fac<-as.character(factor(gol.fac, levels=c("ALL","AML"), labels=c("red","blue")))
+heatmap(golub[as.numeric(rownames(tbl)),], ColSideColors=col.fac,
+        Rowv=NULL, Colv=NULL, labCol=F, labRow=rownames(tbl),col=bluered)
+```
+
+--- &radio
+## Question 1 
+
+If you use the default settings of the [ShinyApp] (https://vshivarov.shinyapps.io/golub_shiny3/) what is the ID of the sixth gene in the table output?
+
+1. 748
+2. _1145_
+3. 2030
+4. 808
